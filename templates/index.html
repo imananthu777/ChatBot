@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Insurance Web Bot - khUshi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+</head>
+<body class="bg-gray-200 dark:bg-gray-900 min-h-screen font-['Inter']">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Chat Container -->
+        <div class="bg-gray-100 dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-700 to-blue-900 dark:from-blue-800 dark:to-blue-950 p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center">
+                            <span class="text-blue-700 dark:text-blue-400 text-xl font-bold">k</span>
+                        </div>
+                        <div>
+                            <h1 class="text-white font-semibold">khUshi</h1>
+                            <p class="text-blue-100 dark:text-blue-200 text-sm">Virtual Insurance Assistant</p>
+                        </div>
+                    </div>
+                    <!-- Dark mode toggle -->
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-blue-800/50 transition-colors">
+                        <svg id="dark-mode-icon" class="w-6 h-6 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                        <svg id="light-mode-icon" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Chat Interface -->
+            <div class="flex flex-col h-[600px]">
+                <div id="chat-messages" class="flex-1 p-6 overflow-y-auto space-y-4 bg-gray-100 dark:bg-gray-800">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                            <span class="text-blue-700 dark:text-blue-300 text-sm font-bold">k</span>
+                        </div>
+                        <div class="bg-blue-50 dark:bg-gray-700 rounded-2xl p-4 max-w-[80%] shadow-sm">
+                            <p class="text-gray-800 dark:text-white">Hi! I'm khUshi. To get started, please enter your policy number (starting with POL) or mobile number.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Input Area -->
+                <div class="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-200 dark:bg-gray-900">
+                    <div class="flex gap-3">
+                        <input type="text" id="user-input" 
+                            class="flex-1 border dark:border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                            placeholder="Type your message here..."
+                            onkeypress="if(event.key === 'Enter') sendMessage()">
+                        <button onclick="sendMessage()" 
+                            class="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 dark:hover:from-blue-800 dark:hover:to-blue-900 transition-all font-medium">
+                            Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sessionData = {
+            isValidated: false,
+            currentMenu: null,
+            policy_number: null
+        };
+
+        // Dark mode functions
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const darkIcon = document.getElementById('dark-mode-icon');
+            const lightIcon = document.getElementById('light-mode-icon');
+            
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                darkIcon.classList.add('hidden');
+                lightIcon.classList.remove('hidden');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                darkIcon.classList.remove('hidden');
+                lightIcon.classList.add('hidden');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Check for saved theme preference or system preference
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.getElementById('dark-mode-icon').classList.remove('hidden');
+            document.getElementById('light-mode-icon').classList.add('hidden');
+        }
+
+        function createActionButton(option, index) {
+            const button = document.createElement('button');
+            const hasEmoji = option.includes('- ') && (
+                option.includes('📝') || option.includes('💰') || 
+                option.includes('⚕️') || option.includes('🔍') ||
+                option.includes('📧') || option.includes('📱') ||
+                option.includes('🏠') || option.includes('👥') ||
+                option.includes('🏦') || option.includes('📄') ||
+                option.includes('✏️') || option.includes('❌')
+            );
+            
+            let className = 'text-left px-5 py-3 rounded-xl transition-all font-medium w-auto max-w-[90%] ';
+            
+            if (option === 'Back to main menu' || option.toLowerCase().includes('back to')) {
+                className += 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600';
+            } else if (hasEmoji) {
+                className += 'bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 border border-blue-100 dark:border-gray-600 shadow-sm hover:shadow';
+            } else if (option.startsWith('✏️') || option.startsWith('📱')) {
+                className += 'bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-800 text-white';
+            } else if (option.startsWith('❌')) {
+                className += 'bg-red-50 dark:bg-red-900/50 hover:bg-red-100 dark:hover:bg-red-900 text-red-600 dark:text-red-300 border border-red-200 dark:border-red-800';
+            } else {
+                className += 'bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow';
+            }
+            
+            button.className = className;
+            
+            if (option.includes(' - ')) {
+                const [action, status] = option.split(' - ');
+                button.innerHTML = `
+                    <div class="flex flex-col">
+                        <span class="font-medium">${action}</span>
+                        <span class="text-sm text-gray-500 dark:text-gray-400 mt-1">${status}</span>
+                    </div>`;
+            } else if (option.startsWith('📅') || option.startsWith('💰') || option.startsWith('🔄')) {
+                button.innerHTML = `<div class="flex items-center gap-2">${option}</div>`;
+            } else {
+                button.textContent = option.startsWith('✏️') || option.startsWith('❌') ? 
+                    option : 
+                    `${index + 1}. ${option}`;
+            }
+            
+            return button;
+        }
+
+        function appendMessage(message, isUser = false, options = null, actions = null) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageContainer = document.createElement('div');
+            messageContainer.className = 'flex items-start gap-3 ' + (isUser ? 'flex-row-reverse' : '');
+            
+            if (!isUser) {
+                const avatar = document.createElement('div');
+                avatar.className = 'w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0';
+                avatar.innerHTML = '<span class="text-blue-700 dark:text-blue-300 text-sm font-bold">k</span>';
+                messageContainer.appendChild(avatar);
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isUser ? 
+                'bg-blue-600 dark:bg-blue-700 text-white rounded-2xl p-4 max-w-[80%] shadow-sm' : 
+                'bg-blue-50 dark:bg-gray-700 text-gray-800 dark:text-white rounded-2xl p-4 max-w-[80%] shadow-sm';
+            messageDiv.textContent = message;
+            messageContainer.appendChild(messageDiv);
+            chatMessages.appendChild(messageContainer);
+
+            if (options && !isUser) {
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = 'flex flex-col gap-2 mt-4 ml-11';
+                
+                options.forEach((option, index) => {
+                    const optionButton = createActionButton(option, index);
+                    optionButton.onclick = () => sendMessage(option);
+                    optionsContainer.appendChild(optionButton);
+                });
+                
+                chatMessages.appendChild(optionsContainer);
+            }
+
+            if (actions && !isUser) {
+                Object.entries(actions).forEach(([key, value]) => {
+                    if (value.startsWith('/download') || value.startsWith('/static')) {
+                        const link = document.createElement('a');
+                        link.href = value;
+                        link.style.display = 'none';
+                        link.id = `action-${key}`;
+                        document.body.appendChild(link);
+                    }
+                });
+            }
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function sendMessage(buttonMessage = null) {
+            const input = document.getElementById('user-input');
+            const message = buttonMessage || input.value;
+            
+            if (!message.trim()) return;
+            
+            if (!buttonMessage) {
+                input.value = '';
+            }
+            
+            appendMessage(message, true);
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        message,
+                        sessionData
+                    })
+                });
+
+                const data = await response.json();
+                const responseData = data.response;
+                
+                sessionData = {
+                    ...sessionData,
+                    ...responseData.sessionData,
+                    isValidated: responseData.isValidated
+                };
+                
+                if (responseData.message) {
+                    appendMessage(responseData.message, false, responseData.options, responseData.actions);
+                } else if (responseData.menu) {
+                    appendMessage(responseData.menu, false, responseData.options, responseData.actions);
+                }
+            } catch (error) {
+                appendMessage('Sorry, there was an error processing your request.', false);
+            }
+        }
+    </script>
+</body>
+</html>
